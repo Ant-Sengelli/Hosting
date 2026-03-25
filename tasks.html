@@ -743,7 +743,271 @@
     document.getElementById('tasks-screen').style.display = 'flex';
   }
 
+  func<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasks</title>
+<style>
+  @font-face {
+    font-family: 'AyrBlufy';
+    src: url('https://ant-sengelli.github.io/Hosting/AyrBlufy-BlackOblique.woff2') format('woff2');
+    font-weight: 900;
+    font-style: oblique;
+  }
+
+  :root {
+    --purple: #421d79;
+    --cream: #fdf5e0;
+    --gold: #ffc700;
+    --dim: rgba(253, 245, 224, 0.35);
+    --font: 'AyrBlufy', sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    color: var(--cream);
+    font-family: var(--font);
+    overflow: hidden;
+  }
+
+  #app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0; 
+  }
+
+  /* ── TASK LIST ── */
+  #task-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    scrollbar-width: none;
+    padding-left: 0.5rem;
+  }
+
+  #task-list::-webkit-scrollbar { display: none; }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    opacity: 0;
+    transform: translateY(4px);
+    animation: fadeUp 0.3s ease-out forwards;
+  }
+
+  .task-check {
+    width: 0.3rem;
+    height: 0.3rem;
+    border-radius: 50%;
+    background: var(--cream);
+    flex-shrink: 0;
+    margin-top: 0.45rem; /* Aligned for 14px text */
+  }
+
+  .task-title {
+    font-size: 14px; /* Reduced to compensate for AyrBlufy's natural scale */
+    color: var(--cream);
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── LIST TABS ── */
+  #list-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    justify-content: center; /* Centered to match your main link layout */
+    padding: 0.1rem 0.5rem;
+  }
+
+  .list-tab {
+    background: none;
+    border: none;
+    font-family: var(--font);
+    font-size: 14px; /* EXACT MATCH to Task Title */
+    color: var(--dim);
+    cursor: pointer;
+    padding: 0;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+
+  .list-tab:not(:last-child)::after {
+    content: '/';
+    color: var(--gold);
+    margin-left: 0.3em;
+    margin-right: 0.3em;
+    opacity: 0.8;
+  }
+
+  .list-tab.active {
+    color: var(--gold);
+  }
+
+  .state-msg { font-size: 14px; color: var(--dim); padding-left: 0.5rem; }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="auth-screen" style="display:none; padding: 1rem;">
+    <button id="sign-in-btn" style="background:none; border:2px solid var(--gold); color:var(--gold); font-family:var(--font); font-size:1rem; padding:0.5rem; cursor:pointer;">SIGN IN</button>
+  </div>
+
+  <div id="tasks-screen" style="display:none; flex-direction:column; height:100%;">
+    <div id="task-list"></div>
+    <div id="list-tabs"></div>
+  </div>
+</div>
+
+<script>
+  // ... (Script remains exactly the same as previous version)
+  const CLIENT_ID = '642016576347-b4fr8esf8faa2i6ohtjon7s9ibuioa0c.apps.googleusercontent.com';
+  const SCOPES    = 'https://www.googleapis.com/auth/tasks.readonly';
+  const REDIRECT  = location.origin + location.pathname;
+
+  function saveToken(token, expiresIn) {
+    const exp = Date.now() + (expiresIn - 60) * 1000;
+    localStorage.setItem('gt_token', token);
+    localStorage.setItem('gt_exp',   exp);
+  }
+
+  function getToken() {
+    const token = localStorage.getItem('gt_token');
+    const exp   = parseInt(localStorage.getItem('gt_exp') || '0', 10);
+    return (token && Date.now() < exp) ? token : null;
+  }
+
+  function clearToken() {
+    localStorage.removeItem('gt_token');
+    localStorage.removeItem('gt_exp');
+  }
+
+  function startAuth() {
+    const params = new URLSearchParams({
+      client_id: CLIENT_ID,
+      redirect_uri: REDIRECT,
+      response_type: 'token',
+      scope: SCOPES,
+      prompt: 'select_account'
+    });
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params;
+  }
+
+  function handleCallback() {
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const token = hash.get('access_token');
+    const exp = parseInt(hash.get('expires_in') || '0', 10);
+    if (token) {
+      saveToken(token, exp);
+      history.replaceState(null, '', location.pathname);
+      return token;
+    }
+    return null;
+  }
+
+  async function apiFetch(url, token) {
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (res.status === 401) { clearToken(); showAuth(); return null; }
+    return res.json();
+  }
+
+  async function fetchLists(token) {
+    const data = await apiFetch('https://tasks.googleapis.com/tasks/v1/users/@me/lists?maxResults=100', token);
+    return data?.items || [];
+  }
+
+  async function fetchTasks(token, listId) {
+    const data = await apiFetch(`https://tasks.googleapis.com/tasks/v1/lists/${listId}/tasks?showCompleted=false&showHidden=false&maxResults=100`, token);
+    return (data?.items || []).filter(t => t.status === 'needsAction' && !t.parent);
+  }
+
+  let allLists = [];
+  let activeListId = null;
+
+  function showAuth() {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('tasks-screen').style.display = 'none';
+  }
+
+  function showTasksScreen() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('tasks-screen').style.display = 'flex';
+  }
+
   function renderTabs() {
+    const el = document.getElementById('list-tabs');
+    el.innerHTML = '';
+    allLists.forEach(list => {
+      const btn = document.createElement('button');
+      btn.className = 'list-tab' + (list.id === activeListId ? ' active' : '');
+      btn.textContent = list.title.toUpperCase();
+      btn.onclick = () => toggleList(list.id);
+      el.appendChild(btn);
+    });
+  }
+
+  function renderTasks(tasks) {
+    const el = document.getElementById('task-list');
+    el.innerHTML = '';
+    if (!tasks.length) {
+      el.innerHTML = '<div class="state-msg">ALL CLEAR.</div>';
+      return;
+    }
+    tasks.forEach((task, i) => {
+      const item = document.createElement('div');
+      item.className = 'task-item';
+      item.style.animationDelay = (i * 0.05) + 's';
+      item.innerHTML = `<div class="task-check"></div><div class="task-title">${task.title}</div>`;
+      el.appendChild(item);
+    });
+  }
+
+  async function toggleList(id) {
+    activeListId = (activeListId === id) ? null : id;
+    renderTabs();
+    const el = document.getElementById('task-list');
+    if (!activeListId) { el.innerHTML = ''; return; }
+    
+    const token = getToken();
+    if (!token) { showAuth(); return; }
+    el.innerHTML = '<div class="state-msg">LOADING…</div>';
+    const tasks = await fetchTasks(token, id);
+    if (tasks !== null) renderTasks(tasks);
+  }
+
+  async function init() {
+    let token = location.hash.includes('access_token') ? handleCallback() : getToken();
+    if (!token) { showAuth(); return; }
+    showTasksScreen();
+    const lists = await fetchLists(token);
+    if (!lists) return;
+    allLists = lists;
+    renderTabs();
+  }
+
+  document.getElementById('sign-in-btn').onclick = startAuth;
+  init();
+</script>
+</body>
+</html>tion renderTabs() {
     const el = document.getElementById('list-tabs');
     el.innerHTML = '';
     allLists.forEach(list => {
