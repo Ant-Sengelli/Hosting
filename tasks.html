@@ -287,11 +287,15 @@
     el.innerHTML = '';
     allLists.forEach(list => {
       const btn = document.createElement('button');
-      btn.className  = 'list-tab' + (list.id === activeListId ? ' active' : '');
+      btn.className   = 'list-tab' + (list.id === activeListId ? ' active' : '');
       btn.textContent = list.title;
-      btn.onclick = () => selectList(list.id);
+      btn.onclick     = () => toggleList(list.id);
       el.appendChild(btn);
     });
+  }
+
+  function clearTasks() {
+    document.getElementById('task-list').innerHTML = '';
   }
 
   function renderTasks(tasks) {
@@ -335,9 +339,17 @@
     });
   }
 
-  async function selectList(id) {
+  async function toggleList(id) {
+    if (activeListId === id) {
+      activeListId = null;
+      renderTabs();
+      clearTasks();
+      return;
+    }
+
     activeListId = id;
     renderTabs();
+
     const token = getToken();
     if (!token) { showAuth(); return; }
 
@@ -349,7 +361,6 @@
   }
 
   async function init() {
-    // Check for OAuth callback
     let token = location.hash.includes('access_token') ? handleCallback() : getToken();
 
     if (!token) { showAuth(); return; }
@@ -360,10 +371,8 @@
     if (!lists) return;
 
     allLists     = lists;
-    activeListId = lists[0]?.id;
+    activeListId = null;
     renderTabs();
-
-    if (activeListId) await selectList(activeListId);
   }
 
   // ── Events ─────────────────────────────────────────────────────
