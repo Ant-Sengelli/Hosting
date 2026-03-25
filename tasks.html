@@ -84,13 +84,15 @@
     gap: 0.3rem 0.5rem;
     align-items: baseline;
     min-height: 1.4rem;
+    margin-top: auto;
+    padding-top: 0.4rem;
   }
 
   .list-tab {
     background: none;
     border: none;
     font-family: var(--font);
-    font-size: 0.7rem;
+    font-size: 1rem;
     color: var(--dim);
     cursor: pointer;
     padding: 0;
@@ -118,7 +120,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.25rem;
     scrollbar-width: none;
   }
 
@@ -127,8 +129,8 @@
   .task-item {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.2rem 0;
+    gap: 0.6rem;
+    padding: 0.25rem 0;
     opacity: 0;
     transform: translateY(6px);
     animation: fadeUp 0.35s ease-out forwards;
@@ -146,14 +148,14 @@
   .task-check {
     width: 0.55rem;
     height: 0.55rem;
-    border: 1.5px solid var(--gold);
+    border-radius: 50%;
+    background: var(--cream);
     flex-shrink: 0;
-    margin-top: 0.28rem;
-    opacity: 0.6;
+    margin-top: 0.35rem;
   }
 
   .task-title {
-    font-size: 0.82rem;
+    font-size: 1.05rem;
     color: var(--cream);
     line-height: 1.35;
     letter-spacing: 0.02em;
@@ -163,7 +165,7 @@
 
   .task-due {
     display: block;
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     color: var(--gold);
     opacity: 0.65;
     margin-top: 0.1rem;
@@ -172,28 +174,11 @@
 
   /* ── STATES ── */
   .state-msg {
-    font-size: 0.72rem;
+    font-size: 0.9rem;
     color: var(--dim);
     letter-spacing: 0.04em;
     padding: 0.25rem 0;
   }
-
-  /* ── SIGN OUT ── */
-  #sign-out-btn {
-    background: none;
-    border: none;
-    font-family: var(--font);
-    font-size: 0.6rem;
-    color: var(--dim);
-    cursor: pointer;
-    padding: 0;
-    letter-spacing: 0.06em;
-    align-self: flex-start;
-    transition: color 0.2s;
-    margin-top: auto;
-  }
-
-  #sign-out-btn:hover { color: var(--cream); }
 </style>
 </head>
 <body>
@@ -204,9 +189,8 @@
   </div>
 
   <div id="tasks-screen" style="display:none; flex-direction:column; gap:0.5rem; height:100%;">
-    <div id="list-tabs"></div>
     <div id="task-list"></div>
-    <button id="sign-out-btn">sign out</button>
+    <div id="list-tabs"></div>
   </div>
 </div>
 
@@ -383,8 +367,7 @@
   }
 
   // ── Events ─────────────────────────────────────────────────────
-  document.getElementById('sign-in-btn').onclick  = startAuth;
-  document.getElementById('sign-out-btn').onclick = () => { clearToken(); showAuth(); };
+  document.getElementById('sign-in-btn').onclick = startAuth;
 
   init();
 </script>
