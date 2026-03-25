@@ -5,7 +5,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tasks</title>
+<title>Tasks</title>/* --- INTERNAL IFRAME CSS --- */
+@font-face {
+  font-family: 'AyrBlufy';
+  src: url('https://ant-sengelli.github.io/Hosting/AyrBlufy-BlackOblique.woff2') format('woff2');
+  font-weight: 900;
+  font-style: oblique;
+}
+
+html, body {
+  background: transparent !important;
+  font-family: 'AyrBlufy', sans-serif !important;
+  /* Matches the base size from your inspector screenshot */
+  font-size: 10px !important; 
+  margin: 0;
+  padding: 0;
+}
+
+/* ── TASK TITLES & TABS ── */
+.task-title, 
+.list-tab {
+  /* 2em of 10px = 20px visual size (Matches H2 Exactly) */
+  font-size: 2em !important; 
+  font-family: 'AyrBlufy', sans-serif !important;
+  line-height: 1 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase;
+}
+
+.list-tab {
+  background: none;
+  border: none;
+  color: rgba(253, 245, 224, 0.35) !important; /* Matches --dim */
+  cursor: pointer;
+}
+
+.list-tab.active {
+  color: #ffc700 !important; /* Matches --gold */
+}
+
+/* ── BULLETS ── */
+.task-check {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50%;
+  background: #fdf5e0; /* Matches --cream */
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 2px;
+}
 <style>
   @font-face {
     font-family: 'AyrBlufy';
